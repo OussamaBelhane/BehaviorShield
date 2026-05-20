@@ -1,0 +1,21 @@
+# ── Core agent ──────────────────────────────────────────────────
+watchdog==4.0.0
+psutil==5.9.8
+pystray==0.19.5         # System tray icon
+Pillow>=10.4.0          # Draw tray icon image in-memory (10.3 has no Py3.14 wheel)
+pywin32==311            # win32evtlog, win32con, win32security
+
+# ── Flask backend ────────────────────────────────────────────────
+flask==3.0.3
+flask-cors==4.0.1
+
+# ── PDF generation ───────────────────────────────────────────────
+weasyprint==62.3
+jinja2==3.1.4
+
+# ── Utilities ────────────────────────────────────────────────────
+python-dotenv==1.0.1
+requests>=2.30.0
+
+# ── Testing ─────────────────────────────────────────────────────
+pytest==8.1.1

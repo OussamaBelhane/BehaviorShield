@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BehaviorShield Threat Protection Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm 15mm 20mm 15mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #a0aec0;
+            }
+            @bottom-left {
+                content: "BehaviorShield Security Report | Confidential";
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #a0aec0;
+            }
+        }
+        
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #2d3748;
+            line-height: 1.5;
+            font-size: 10pt;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header / Cover Section */
+        .report-header {
+            border-bottom: 2px solid #3182ce;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .header-title-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .logo-text {
+            font-size: 24pt;
+            font-weight: 800;
+            color: #1a365d;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo-text span {
+            color: #3182ce;
+        }
+
+        .report-title {
+            font-size: 14pt;
+            font-weight: 600;
+            color: #4a5568;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .meta-table {
+            width: 100%;
+            margin-top: 15px;
+            font-size: 9pt;
+            color: #718096;
+            border-collapse: collapse;
+        }
+        
+        .meta-table td {
+            padding: 2px 0;
+        }
+        
+        .meta-table td.label {
+            font-weight: 600;
+            color: #4a5568;
+            width: 15%;
+        }
+
+        /* Metric Cards Grid */
+        .metrics-grid {
+            display: table;
+            width: 100%;
+            margin-bottom: 30px;
+            border-spacing: 10px 0;
+        }
+
+        .metric-card {
+            display: table-cell;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            width: 25%;
+        }
+
+        .metric-value {
+            font-size: 20pt;
+            font-weight: 700;
+            color: #2b6cb0;
+            margin-bottom: 5px;
+        }
+        
+        .metric-card.alert-card .metric-value {
+            color: #e53e3e;
+        }
+        
+        .metric-card.kill-card .metric-value {
+            color: #dd6b20;
+        }
+
+        .metric-label {
+            font-size: 8pt;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Section Styling */
+        .section-title {
+            font-size: 12pt;
+            font-weight: 700;
+            color: #1a365d;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            page-break-after: avoid;
+        }
+
+        /* Table Styling */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+            margin-bottom: 20px;
+        }
+
+        .data-table th {
+            background-color: #edf2f7;
+            color: #4a5568;
+            font-weight: 700;
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 2px solid #cbd5e0;
+        }
+
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 7.5pt;
+            font-weight: 700;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-info {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+        }
+
+        .badge-warning {
+            background-color: #feebc8;
+            color: #c05621;
+        }
+
+        .badge-critical {
+            background-color: #fed7d7;
+            color: #9b2c2c;
+        }
+
+        .badge-kill {
+            background-color: #fed7d7;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+        }
+
+        .timestamp-col {
+            white-space: nowrap;
+            color: #718096;
+            width: 15%;
+        }
+        
+        .pid-col {
+            font-family: "Courier New", Courier, monospace;
+            width: 8%;
+        }
+
+        .image-col {
+            font-weight: 600;
+            color: #2d3748;
+            width: 20%;
+        }
+
+        /* No data style */
+        .no-data-msg {
+            color: #a0aec0;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+            background: #f7fafc;
+            border: 1px dashed #cbd5e0;
+            border-radius: 6px;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <div class="report-header">
+        <div class="header-title-container">
+            <div>
+                <div class="logo-text">Behavior<span>Shield</span></div>
+                <div class="report-title">Endpoint Threat Intelligence Report</div>
+            </div>
+        </div>
+        
+        <table class="meta-table">
+            <tr>
+                <td class="label">Generated At:</td>
+                <td>{{ generated_at }}</td>
+                <td class="label">Date Range:</td>
+                <td>{{ from_ts }} to {{ to_ts }}</td>
+            </tr>
+            <tr>
+                <td class="label">Classification:</td>
+                <td style="color: #c53030; font-weight: bold;">CONFIDENTIAL // SECURITY AUDIT</td>
+                <td class="label">Agent Status:</td>
+                <td style="color: #38a169; font-weight: bold;">ACTIVE / RUNNING</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Overview Metric Cards -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-value">{{ total_events }}</div>
+            <div class="metric-label">Events Monitored</div>
+        </div>
+        <div class="metric-card alert-card">
+            <div class="metric-value">{{ total_alerts }}</div>
+            <div class="metric-label">Alerts Triggered</div>
+        </div>
+        <div class="metric-card kill-card">
+            <div class="metric-value">{{ kills }}</div>
+            <div class="metric-label">Threats Blocked</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ whitelist_count }}</div>
+            <div class="metric-label">Whitelisted Apps</div>
+        </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="section-title">Executive Summary</div>
+    <p style="margin-top: 0; font-size: 10.5pt; text-align: justify;">
+        This document provides a comprehensive security assessment compiled from real-time events recorded by the 
+        <strong>BehaviorShield Protection Engine</strong> on this endpoint. The BehaviorShield Agent continuously tracks 
+        active processes, scans system binaries for known malware signatures, evaluates filesystem interactions, and engages 
+        instant containment when behavioral scoring thresholds are breached. During this observation period, a total of 
+        <strong>{{ total_events }}</strong> system events were analyzed, resulting in <strong>{{ total_alerts }}</strong> 
+        elevated alerts and <strong>{{ kills }}</strong> successful process termination actions.
+    </p>
+
+    <!-- Elevated Alerts Section -->
+    <div class="section-title">Critical & Elevated Security Alerts</div>
+    {% if alerts %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="timestamp-col">Timestamp</th>
+                <th class="pid-col">PID</th>
+                <th class="image-col">Process Name</th>
+                <th style="width: 10%;">Score</th>
+                <th style="width: 12%;">Type</th>
+                <th>Alert Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in alerts %}
+            <tr>
+                <td class="timestamp-col">{{ a.timestamp | replace("T", " ") | truncate(19, True, "") }}</td>
+                <td class="pid-col">{{ a.pid if a.pid > 0 else 'N/A' }}</td>
+                <td class="image-col" style="word-break: break-all;">{{ a.image_path | default('unknown') | replace("C:\\BehaviorShield\\TestApps\\bin\\", "") }}</td>
+                <td>
+                    <span class="badge {% if a.score >= 75 %}badge-critical{% elif a.score >= 30 %}badge-warning{% else %}badge-info{% endif %}">
+                        +{{ a.score }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge {% if 'KILL' in a.alert_type %}badge-kill{% elif 'THRESHOLD' in a.alert_type %}badge-critical{% else %}badge-warning{% endif %}">
+                        {{ a.alert_type }}
+                    </span>
+                </td>
+                <td style="color: #4a5568;">{{ a.message }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data-msg">
+        No critical or elevated threat alerts recorded during this observation window.
+    </div>
+    {% endif %}
+
+    <!-- Page Break for Clean Presentation -->
+    <div class="page-break"></div>
+
+    <!-- Active Quarantine Registry -->
+    <div class="section-title">Active Threat Quarantine Registry</div>
+    <p style="margin-top: 0; font-size: 9.5pt; color: #718096; margin-bottom: 12px;">
+        To ensure complete host integrity, files that were modified or written by terminated threat processes have been 
+        securely relocated to the quarantined vaults and isolated from executing inside normal file system paths.
+    </p>
+    {% if quarantine %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="timestamp-col">Quarantine Date</th>
+                <th style="width: 25%;">Target Source Process</th>
+                <th style="width: 35%;">Original File Location</th>
+                <th style="width: 10%;">Status</th>
+                <th>Quarantine Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for q in quarantine %}
+            <tr>
+                <td class="timestamp-col">{{ q.quarantined_at | replace("T", " ") | truncate(19, True, "") }}</td>
+                <td class="image-col" style="word-break: break-all;">{{ q.process_image | default('unknown') }} (PID {{ q.process_pid }})</td>
+                <td style="font-family: 'Courier New', Courier, monospace; font-size: 8pt; word-break: break-all;">{{ q.original_path }}</td>
+                <td>
+                    <span class="badge badge-critical" style="background-color: #feebc8; color: #c05621;">
+                        {{ q.status }}
+                    </span>
+                </td>
+                <td style="color: #4a5568; font-size: 8.5pt;">{{ q.reason | default('Suspicious modifications during threat activity') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data-msg">
+        No file objects are currently isolated inside the quarantine registry.
+    </div>
+    {% endif %}
+
+    <!-- Monitored Activity Log -->
+    <div class="section-title">Monitored Behavioral Events (Recent)</div>
+    {% if events %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="timestamp-col">Event Time</th>
+                <th class="pid-col">PID</th>
+                <th class="image-col">Process Name</th>
+                <th style="width: 15%;">Event Action</th>
+                <th style="width: 10%;">Score</th>
+                <th>Target Object Location</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in events[:50] %}
+            <tr>
+                <td class="timestamp-col">{{ e.timestamp | replace("T", " ") | truncate(19, True, "") }}</td>
+                <td class="pid-col">{{ e.pid if e.pid > 0 else 'N/A' }}</td>
+                <td class="image-col" style="word-break: break-all;">{{ e.process_name | default('unknown') }}</td>
+                <td>
+                    <span class="badge badge-info">
+                        {{ e.event_type }}
+                    </span>
+                </td>
+                <td style="font-weight: 700; color: #2b6cb0;">
+                    {% if e.score_delta > 0 %}+{{ e.score_delta }}{% else %}0{% endif %}
+                </td>
+                <td style="font-family: 'Courier New', Courier, monospace; font-size: 8pt; color: #4a5568; word-break: break-all;">
+                    {{ e.dest_path }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data-msg">
+        No background file system activity recorded in this session.
+    </div>
+    {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+<Sysmon schemaversion="4.81">
+  <HashAlgorithms>SHA256</HashAlgorithms>
+  <EventFiltering>
+    <!-- Event ID 1: Process creation -->
+    <ProcessCreate onmatch="include">
+      <!-- Include all process creations to get their hashes -->
+      <Rule groupRelation="or">
+        <Image condition="contains">\</Image>
+      </Rule>
+    </ProcessCreate>
+    
+    <!-- Event ID 11: File creation -->
+    <FileCreate onmatch="include">
+      <!-- Monitor file creations -->
+      <Rule groupRelation="or">
+        <TargetFilename condition="contains">\</TargetFilename>
+      </Rule>
+    </FileCreate>
+  </EventFiltering>
+</Sysmon>
