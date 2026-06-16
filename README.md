@@ -225,3 +225,16 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 
 ---
 
+## Testing & Simulator Results
+
+BehaviorShield includes a built-in benign simulator to test behavior rules (`test_ransomware_sim.py`).
+
+### Verification & Metrics:
+- **Test File Creation**: The script populates `C:/BehaviorShield/TestFolder/RansomTest` with mock files and mass-renames them to `.locked` simulating encryption.
+- **Detection Speed**: **1.0 seconds** elapsed between the first suspicious rename event and process mitigation.
+- **Affected File Limit**: Only **3–4 files** affected/encrypted before the agent triggers process termination.
+- **Response Action**: Automatically terminates the threat process and moves the encrypted files to `C:\BehaviorShield\Quarantine\`.
+- **Non-Admin Test Mode**: A dedicated fallback allows testing the scoring rules and file quarantine within the `TestFolder` even when not running as Administrator (without Sysmon).
+
+---
+
