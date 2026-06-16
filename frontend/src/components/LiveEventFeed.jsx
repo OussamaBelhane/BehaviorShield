@@ -71,17 +71,18 @@ const INTER = "'Inter', sans-serif";
 const SourceBadge = ({ source }) => {
   const isSys = source?.toLowerCase() === 'sysmon';
   const label = isSys ? 'SYS' : 'WD';
-  
   return (
-    <div 
-      className="flex items-center justify-center h-4 w-9 rounded-sm border"
+    <div
       style={{
-        backgroundColor: isSys ? 'rgba(0, 212, 255, 0.15)' : 'transparent',
-        borderColor: isSys ? 'rgba(0, 212, 255, 0.4)' : 'rgba(74, 85, 104, 0.4)',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        height: 16, minWidth: 32, paddingLeft: 4, paddingRight: 4,
+        borderRadius: 3,
+        backgroundColor: isSys ? 'rgba(0,212,255,0.13)' : 'rgba(255,255,255,0.04)',
+        border: `1px solid ${isSys ? 'rgba(0,212,255,0.35)' : 'rgba(255,255,255,0.08)'}`,
         color: isSys ? COLORS.cyan : COLORS.secondaryText,
-        fontSize: '9px',
-        letterSpacing: '0.08em',
-        fontFamily: JETBRAINS_MONO
+        fontSize: '9px', letterSpacing: '0.1em',
+        fontFamily: JETBRAINS_MONO, fontWeight: 700,
+        boxShadow: isSys ? '0 0 6px rgba(0,212,255,0.15)' : 'none',
       }}
     >
       {label}
@@ -90,33 +91,56 @@ const SourceBadge = ({ source }) => {
 };
 
 /**
- * Score Delta Display
+ * Score Delta Display — pill with background fill
  */
 const ScoreDelta = ({ delta }) => {
-  if (!delta) return <span style={{ color: COLORS.secondaryText }}>—</span>;
-  
-  let color = COLORS.amber;
-  if (delta >= 30) color = COLORS.red;
-  else if (delta >= 16) color = '#FF8C00';
+  if (!delta) return <span style={{ color: COLORS.secondaryText, fontFamily: JETBRAINS_MONO, fontSize: '11px' }}>—</span>;
+
+  let color, bg, borderColor;
+  if (delta >= 30) {
+    color = COLORS.red; bg = 'rgba(255,45,85,0.15)'; borderColor = 'rgba(255,45,85,0.3)';
+  } else if (delta >= 16) {
+    color = '#FF8C00'; bg = 'rgba(255,140,0,0.12)'; borderColor = 'rgba(255,140,0,0.28)';
+  } else {
+    color = COLORS.amber; bg = 'rgba(255,184,0,0.10)'; borderColor = 'rgba(255,184,0,0.25)';
+  }
 
   return (
-    <span style={{ color, fontWeight: 'bold', fontFamily: JETBRAINS_MONO, fontSize: '12px' }}>
+    <span style={{
+      display: 'inline-block',
+      padding: '1px 6px',
+      borderRadius: 4,
+      background: bg,
+      border: `1px solid ${borderColor}`,
+      color, fontWeight: 700,
+      fontFamily: JETBRAINS_MONO, fontSize: '11px',
+    }}>
       +{delta}
     </span>
   );
 };
 
 /**
- * Action Tag
+ * Action Tag — colored chip per action type
  */
+const ACTION_STYLES = {
+  RENAME: { color: COLORS.amber,   bg: 'rgba(255,184,0,0.08)',  border: 'rgba(255,184,0,0.2)' },
+  DELETE: { color: '#FF6B6B',      bg: 'rgba(255,107,107,0.08)',border: 'rgba(255,107,107,0.2)' },
+  CREATE: { color: '#00FF94',      bg: 'rgba(0,255,148,0.07)', border: 'rgba(0,255,148,0.18)' },
+  WRITE:  { color: COLORS.cyan,    bg: 'rgba(0,212,255,0.07)', border: 'rgba(0,212,255,0.18)' },
+};
+
 const ActionTag = ({ type }) => {
   const t = type?.toUpperCase() || 'UNKNOWN';
-  let color = COLORS.mutedGray;
-  if (t === 'RENAME') color = COLORS.amber;
-  if (t === 'DELETE') color = '#FF6B6B';
-
+  const s = ACTION_STYLES[t] || { color: COLORS.mutedGray, bg: 'transparent', border: 'transparent' };
   return (
-    <span style={{ color, fontFamily: JETBRAINS_MONO, fontSize: '10px', letterSpacing: '0.05em' }}>
+    <span style={{
+      display: 'inline-block',
+      padding: '1px 5px', borderRadius: 3,
+      background: s.bg, border: `1px solid ${s.border}`,
+      color: s.color, fontFamily: JETBRAINS_MONO,
+      fontSize: '9.5px', letterSpacing: '0.06em', fontWeight: 700,
+    }}>
       {t}
     </span>
   );
@@ -418,105 +442,191 @@ const LiveEventFeed = () => {
 
   // --- Render ---
 
+  const threatBorderColor = threatState === THREAT_LEVELS.CRITICAL ? COLORS.red
+    : threatState >= THREAT_LEVELS.ALERT   ? 'rgba(255,184,0,0.55)'
+    : threatState >= THREAT_LEVELS.MONITOR ? 'rgba(255,184,0,0.25)'
+    : 'rgba(255,255,255,0.05)';
+
   return (
-    <div 
-      className="flex flex-col h-full border overflow-hidden relative"
-      style={{ 
+    <div
+      className="flex flex-col h-full overflow-hidden relative"
+      style={{
         backgroundColor: COLORS.bgFeed,
-        borderColor: threatState === THREAT_LEVELS.CRITICAL ? COLORS.red : 
-                    threatState >= THREAT_LEVELS.ALERT ? 'rgba(255, 184, 0, 0.6)' :
-                    threatState >= THREAT_LEVELS.MONITOR ? 'rgba(255, 184, 0, 0.3)' :
-                    'rgba(255, 255, 255, 0.06)',
-        boxShadow: threatState === THREAT_LEVELS.CRITICAL ? `0 0 40px ${COLORS.red}33` :
-                   threatState >= THREAT_LEVELS.MONITOR ? `0 0 20px ${COLORS.amber}22` : 'none',
-        transition: 'all 0.3s ease-out'
+        border: `1px solid ${threatBorderColor}`,
+        borderRadius: 12,
+        boxShadow: threatState === THREAT_LEVELS.CRITICAL
+          ? `0 0 50px ${COLORS.red}28, inset 0 0 0 1px ${COLORS.red}20`
+          : threatState >= THREAT_LEVELS.MONITOR
+          ? `0 0 28px ${COLORS.amber}18`
+          : '0 0 0 1px rgba(0,212,255,0.04)',
+        transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
       }}
     >
       {/* THREAT BANNERS */}
       {threatState === THREAT_LEVELS.CRITICAL && activeThreatProcess && (
-        <div 
-          className="absolute top-0 left-0 right-0 z-50 py-2 px-4 flex items-center justify-between animate-slide-down"
-          style={{ backgroundColor: COLORS.red, color: 'white', fontFamily: INTER, fontWeight: 'bold' }}
+        <div
+          className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between animate-slide-down"
+          style={{
+            background: 'linear-gradient(90deg, #FF2D55, #c4002c)',
+            padding: '6px 16px',
+            fontFamily: INTER, fontWeight: 700, fontSize: 12, color: 'white',
+            letterSpacing: '0.05em',
+          }}
         >
-          <div className="flex items-center gap-3">
-            <Zap size={16} fill="white" />
-            <span className="text-sm">⚡ THREAT KILLED — {activeThreatProcess.process_name} — PID {activeThreatProcess.pid} — SCORE {activeThreatProcess.process_score}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Zap size={14} fill="white" />
+            <span>THREAT KILLED — {activeThreatProcess.process_name} — PID {activeThreatProcess.pid} — SCORE {activeThreatProcess.process_score}</span>
           </div>
+          <div style={{ fontSize: 10, opacity: 0.75 }}>PROCESS TERMINATED + QUARANTINED</div>
         </div>
       )}
-      
+
       {threatState === THREAT_LEVELS.ALERT && !activeThreatProcess && (
-         <div 
-          className="absolute top-0 left-0 right-0 z-50 py-1.5 px-4 flex items-center justify-center animate-slide-down"
-          style={{ backgroundColor: COLORS.amber, color: COLORS.bgPage, fontFamily: INTER, fontWeight: 'bold' }}
+        <div
+          className="absolute top-0 left-0 right-0 z-50 flex items-center justify-center animate-slide-down"
+          style={{
+            background: 'linear-gradient(90deg, rgba(255,184,0,0.92), rgba(255,140,0,0.92))',
+            padding: '5px 16px',
+            fontFamily: INTER, fontWeight: 700, fontSize: 11,
+            color: '#0a0f1e', letterSpacing: '0.1em',
+          }}
         >
-          <span className="text-xs tracking-wider">⚠ SUSPICIOUS ACTIVITY DETECTED — ELEVATED SCORE</span>
+          ⚠ SUSPICIOUS ACTIVITY DETECTED — ELEVATED THREAT SCORE
         </div>
       )}
 
       {/* FEED HEADER */}
-      <header className="flex items-center justify-between px-4 h-12 border-b border-white/5 bg-black/20 shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col">
-             <span className="text-[10px] tracking-[0.2em] text-[#8892A4] font-bold">LIVE EVENT FEED</span>
-             <div className="flex items-center gap-1.5 mt-0.5">
-                <div 
-                  className={`w-1.5 h-1.5 rounded-full ${isLive ? 'animate-pulse' : ''}`}
-                  style={{ backgroundColor: isLive ? COLORS.cyan : COLORS.secondaryText }}
-                />
-                <span className="text-[10px] font-bold" style={{ color: isLive ? COLORS.cyan : COLORS.secondaryText }}>
-                  {isLive ? 'LIVE' : 'IDLE'}
-                </span>
-             </div>
+      <header
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 14px',
+          height: 48,
+          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          background: 'rgba(0,0,0,0.25)',
+          flexShrink: 0,
+          position: 'relative',
+        }}
+      >
+        {/* Scan line animation on header */}
+        <div style={{
+          position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', borderRadius: '11px 11px 0 0',
+        }}>
+          <div style={{
+            position: 'absolute', left: 0, right: 0, height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.25), transparent)',
+            animation: 'scan-line 4s linear infinite',
+          }} />
+        </div>
+
+        {/* Left: title + live indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div>
+            <div style={{
+              fontFamily: JETBRAINS_MONO, fontSize: 10,
+              fontWeight: 700, letterSpacing: '0.18em',
+              color: '#5A6880',
+            }}>LIVE EVENT FEED</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+              <div style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: isLive ? COLORS.cyan : COLORS.secondaryText,
+                boxShadow: isLive ? '0 0 7px #00D4FF' : 'none',
+                animation: isLive ? 'pulseDot 1.5s ease-in-out infinite' : 'none',
+              }} />
+              <span style={{
+                fontFamily: JETBRAINS_MONO, fontSize: 9, fontWeight: 700,
+                color: isLive ? COLORS.cyan : COLORS.secondaryText,
+                letterSpacing: '0.1em',
+              }}>
+                {isLive ? 'LIVE' : 'IDLE'}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-8">
-           <div className="flex flex-col items-end">
-              <span className="text-[9px] text-[#4A5568] uppercase tracking-wider">Velocity</span>
-              <div className="flex items-baseline gap-1">
-                 <span 
-                    className="text-lg font-bold leading-none"
-                    style={{ 
-                      fontFamily: JETBRAINS_MONO,
-                      color: velocity > 50 ? COLORS.red : velocity > 20 ? COLORS.amber : '#E2E8F0'
-                    }}
-                  >
-                    {velocity}
-                  </span>
-                 <span className="text-[10px] text-[#4A5568] font-mono">evt/s</span>
-              </div>
-           </div>
+        {/* Right: velocity, total, filter */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: JETBRAINS_MONO, fontSize: 9, color: '#3D5060', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Velocity</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+              <span style={{
+                fontFamily: JETBRAINS_MONO, fontSize: 18, fontWeight: 700, lineHeight: 1,
+                color: velocity > 50 ? COLORS.red : velocity > 20 ? COLORS.amber : '#E2E8F0',
+              }}>{velocity}</span>
+              <span style={{ fontFamily: JETBRAINS_MONO, fontSize: 9, color: '#3D5060' }}>evt/s</span>
+            </div>
+          </div>
 
-           <div className="flex flex-col items-end">
-              <span className="text-[9px] text-[#4A5568] uppercase tracking-wider">Total</span>
-              <span className="text-lg font-bold leading-none text-[#E2E8F0]" style={{ fontFamily: JETBRAINS_MONO }}>
-                {totalEvents || totalSessionEvents}
-              </span>
-           </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: JETBRAINS_MONO, fontSize: 9, color: '#3D5060', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Total</div>
+            <span style={{ fontFamily: JETBRAINS_MONO, fontSize: 18, fontWeight: 700, lineHeight: 1, color: '#E2E8F0' }}>
+              {totalEvents || totalSessionEvents}
+            </span>
+          </div>
 
-           <div className="relative w-48 group">
-              <Search size={14} className="absolute left-0 top-1/2 -translate-y-1/2 text-[#4A5568] transition-colors group-focus-within:text-cyan-400" />
-              <input 
-                type="text"
-                placeholder="Filter by process, path, action..."
-                className="w-full bg-transparent border-b border-[#4A5568] pl-5 pr-2 py-1 text-xs text-[#C8D0DC] focus:outline-none focus:border-cyan-400 transition-all font-mono"
-                value={filterQuery}
-                onChange={(e) => setFilterQuery(e.target.value)}
-              />
-           </div>
+          <div style={{ position: 'relative' }}>
+            <Search size={13} style={{
+              position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
+              color: '#3D5060', pointerEvents: 'none',
+            }} />
+            <input
+              type="text"
+              placeholder="Filter process, path, action…"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 6, padding: '4px 10px 4px 26px',
+                fontFamily: JETBRAINS_MONO, fontSize: 11, color: '#C8D0DC',
+                outline: 'none', width: 200,
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+              }}
+              onFocus={e => {
+                e.target.style.borderColor = 'rgba(0,212,255,0.35)';
+                e.target.style.boxShadow = '0 0 0 2px rgba(0,212,255,0.08)';
+              }}
+              onBlur={e => {
+                e.target.style.borderColor = 'rgba(255,255,255,0.07)';
+                e.target.style.boxShadow = 'none';
+              }}
+              value={filterQuery}
+              onChange={(e) => setFilterQuery(e.target.value)}
+            />
+          </div>
         </div>
       </header>
 
       {/* FEED COLUMN HEADERS */}
-      <div className="flex items-center px-4 h-8 bg-black/30 border-b border-white/5 text-[10px] font-bold text-[#4A5568] uppercase tracking-widest shrink-0">
-         <div className="w-[72px]">Timestamp</div>
-         <div className="w-[44px]">Src</div>
-         <div className="w-[140px]">Process</div>
-         <div className="w-[56px]">PID</div>
-         <div className="w-[64px]">Action</div>
-         <div className="flex-1">File Path</div>
-         <div className="w-[52px] text-right">Score</div>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        padding: '0 14px', height: 30,
+        background: 'rgba(0,0,0,0.35)',
+        borderBottom: '1px solid rgba(255,255,255,0.035)',
+        flexShrink: 0,
+        position: 'relative',
+      }}>
+        {/* Accent underline */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 14, right: 14, height: 1,
+          background: 'linear-gradient(90deg, rgba(0,212,255,0.2), transparent)',
+          pointerEvents: 'none',
+        }} />
+        {[
+          ['TIMESTAMP', '72px'],
+          ['SRC', '40px'],
+          ['PROCESS', '140px'],
+          ['PID', '52px'],
+          ['ACTION', '76px'],
+          ['FILE PATH', '1'],
+          ['SCORE', '56px', true],
+        ].map(([col, w, right]) => (
+          <div key={col} style={{
+            width: w === '1' ? undefined : w,
+            flex: w === '1' ? 1 : undefined,
+            fontFamily: JETBRAINS_MONO, fontSize: 9, fontWeight: 700,
+            color: '#3A4A5C', textTransform: 'uppercase', letterSpacing: '0.12em',
+            textAlign: right ? 'right' : 'left',
+          }}>{col}</div>
+        ))}
       </div>
 
       {/* THE FEED */}
@@ -550,74 +660,101 @@ const LiveEventFeed = () => {
               const prevEvent = subIdx === 0 ? filteredEvents[idx - 1] : displayEvents[subIdx - 1];
               const isGrouped = prevEvent && prevEvent.pid === item.pid && prevEvent.timestamp?.split('.')[0] === item.timestamp?.split('.')[0];
               
+              // Left border threat indicator
+              const rowBorderColor = item.process_score >= 75 ? COLORS.red
+                : item.process_score >= 50 ? COLORS.amber
+                : item.process_score >= 30 ? '#FF8C00'
+                : 'transparent';
+
               return (
-                <div 
+                <div
                   key={`${item.id}-${item.timestamp}-${item.event_type}`}
                   onClick={() => { setSelectedEventId(item.id); setPanelError(null); }}
-                  className={`flex items-center px-4 h-9 cursor-pointer transition-all duration-150 relative group animate-row-in ${isBurst && subIdx > 0 ? 'bg-black/10' : ''}`}
-                  style={{ 
-                    backgroundColor: isSelected ? 'rgba(0, 212, 255, 0.08)' : getRowBackground(item),
-                    borderLeft: isGrouped ? `2px solid ${getProcessColor(item)}` : 'none',
-                    opacity: isBurst && subIdx > 0 ? 0.7 : 1
+                  className={`animate-row-in ${isBurst && subIdx > 0 ? '' : ''}`}
+                  style={{
+                    display: 'flex', alignItems: 'center',
+                    padding: '0 14px',
+                    height: 34,
+                    cursor: 'pointer',
+                    position: 'relative',
+                    backgroundColor: isSelected
+                      ? 'rgba(0,212,255,0.07)'
+                      : getRowBackground(item),
+                    borderLeft: `2px solid ${isSelected ? COLORS.cyan : rowBorderColor}`,
+                    opacity: isBurst && subIdx > 0 ? 0.65 : 1,
+                    transition: 'background 0.12s, border-color 0.12s',
+                    borderBottom: '1px solid rgba(255,255,255,0.025)',
                   }}
+                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.025)'; }}
+                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.backgroundColor = getRowBackground(item); }}
                 >
-                  {/* CYAN FLASH OVERLAY (Only for new events) */}
-                  <div className="absolute inset-0 bg-cyan-400/5 opacity-0 group-active:opacity-100 pointer-events-none transition-opacity duration-200" />
-                  
-                  <div className="w-[72px] text-[11px] font-mono" style={{ color: COLORS.secondaryText }}>
-                     {item.timestamp?.slice(11, 19)}
+                  {/* Timestamp */}
+                  <div style={{ width: 72, fontFamily: JETBRAINS_MONO, fontSize: 10.5, color: COLORS.secondaryText, flexShrink: 0 }}>
+                    {item.timestamp?.slice(11, 19)}
                   </div>
-                  
-                  <div className="w-[44px]">
-                     <SourceBadge source={item.source} />
+
+                  {/* Source */}
+                  <div style={{ width: 40, flexShrink: 0 }}>
+                    <SourceBadge source={item.source} />
                   </div>
-                  
-                  <div className="w-[140px] truncate pr-2 flex items-center gap-1">
-                     <span 
-                      className="text-[12px] font-semibold truncate"
-                      style={{ 
-                        color: getProcessColor(item),
-                        textDecoration: item.status === 'KILLED' ? 'line-through' : 'none'
-                      }}
-                    >
+
+                  {/* Process name */}
+                  <div style={{ width: 140, display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden', flexShrink: 0, paddingRight: 6 }}>
+                    <span style={{
+                      fontFamily: INTER, fontSize: 12, fontWeight: 600,
+                      color: getProcessColor(item),
+                      textDecoration: item.status === 'KILLED' ? 'line-through' : 'none',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
                       {item.process_name}
                     </span>
                     {item.status === 'KILLED' && (
-                      <span className="text-[9px] px-1 bg-red-500/20 border border-red-500/30 text-red-500 rounded-sm font-bold">KILLED</span>
+                      <span style={{
+                        flexShrink: 0, fontSize: 8, padding: '1px 4px',
+                        background: 'rgba(255,45,85,0.15)',
+                        border: '1px solid rgba(255,45,85,0.3)',
+                        color: COLORS.red, borderRadius: 3, fontWeight: 700, letterSpacing: '0.05em',
+                        fontFamily: JETBRAINS_MONO,
+                      }}>KILLED</span>
                     )}
                   </div>
-                  
-                  <div className="w-[56px] text-[11px] font-mono text-[#4A5568]">
-                     {item.pid || '—'}
-                  </div>
-                  
-                  <div className="w-[64px] flex items-center gap-1">
-                     <ActionTag type={item.event_type} />
-                     {isBurst && subIdx === 0 && (
-                        <span className="text-[9px] text-amber-500 font-bold">×{e._burstCount}</span>
-                     )}
-                  </div>
-                  
-                  <div className="flex-1 overflow-hidden pr-4 font-mono text-[11px] flex items-center gap-2" style={{ color: COLORS.mutedGray }}>
-                     {isBurst && subIdx === 0 && (
-                        <button 
-                          onClick={(evt) => toggleBurst(e.id, evt)}
-                          className="text-[#4A5568] hover:text-white"
-                        >
-                          {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                        </button>
-                     )}
-                     <div className="flex-1 overflow-hidden">
-                        {renderPath(item.dest_path || item.source_path)}
-                     </div>
-                  </div>
-                  
-                  <div className="w-[52px] text-right">
-                     <ScoreDelta delta={item.score_delta} />
+
+                  {/* PID */}
+                  <div style={{ width: 52, fontFamily: JETBRAINS_MONO, fontSize: 10.5, color: '#3A4A5C', flexShrink: 0 }}>
+                    {item.pid || '—'}
                   </div>
 
-                  {/* HOVER HIGHLIGHT */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/[0.03] pointer-events-none transition-opacity" />
+                  {/* Action */}
+                  <div style={{ width: 76, display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                    <ActionTag type={item.event_type} />
+                    {isBurst && subIdx === 0 && (
+                      <span style={{ fontSize: 9, color: COLORS.amber, fontWeight: 700, fontFamily: JETBRAINS_MONO }}>×{e._burstCount}</span>
+                    )}
+                  </div>
+
+                  {/* File path */}
+                  <div style={{
+                    flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center', gap: 6,
+                    fontFamily: JETBRAINS_MONO, fontSize: 10.5, color: COLORS.mutedGray,
+                    paddingRight: 8,
+                  }}>
+                    {isBurst && subIdx === 0 && (
+                      <button
+                        onClick={(evt) => toggleBurst(e.id, evt)}
+                        style={{ color: COLORS.secondaryText, background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+                      >
+                        {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                      </button>
+                    )}
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      {renderPath(item.dest_path || item.source_path)}
+                    </div>
+                  </div>
+
+                  {/* Score */}
+                  <div style={{ width: 56, textAlign: 'right', flexShrink: 0 }}>
+                    <ScoreDelta delta={item.score_delta} />
+                  </div>
                 </div>
               );
             });
@@ -858,32 +995,36 @@ const LiveEventFeed = () => {
           100% { transform: translateX(100%); }
         }
         @keyframes slide-down {
-          from { transform: translateY(-100%); }
-          to { transform: translateY(0); }
+          from { transform: translateY(-100%); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
         }
         @keyframes panel-in {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
+          from { transform: translateX(100%); opacity: 0; }
+          to   { transform: translateX(0);    opacity: 1; }
         }
         @keyframes fade-in {
           from { opacity: 0; }
-          to { opacity: 1; }
+          to   { opacity: 1; }
         }
         @keyframes row-in {
-          from { transform: translateY(-5px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
+          from { transform: translateX(-4px); opacity: 0; }
+          to   { transform: translateX(0);    opacity: 1; }
         }
-        .animate-shimmer { animation: shimmer 2s infinite; }
+        @keyframes scan-line {
+          0%   { transform: translateY(-100%); }
+          100% { transform: translateY(800%); }
+        }
+        .animate-shimmer    { animation: shimmer 2.5s infinite; }
         .animate-slide-down { animation: slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        .animate-panel-in { animation: panel-in 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-        .animate-fade-in { animation: fade-in 0.2s linear; }
-        .animate-row-in { animation: row-in 0.12s ease-out; }
-        .animate-spin-slow { animation: spin 3s linear infinite; }
-        
-        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+        .animate-panel-in   { animation: panel-in 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+        .animate-fade-in    { animation: fade-in 0.2s linear; }
+        .animate-row-in     { animation: row-in 0.14s ease-out; }
+        .animate-spin-slow  { animation: spin 3s linear infinite; }
+
+        .scrollbar-thin::-webkit-scrollbar { width: 3px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.15); border-radius: 10px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(0,212,255,0.3); }
       `}</style>
     </div>
   );

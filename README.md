@@ -94,6 +94,9 @@ BehaviorShield/
 
 ## Quick Start — Standalone EXE (Recommended)
 
+> [!NOTE]
+> If the `dist\BehaviorShield.exe` file does not exist, build it first by running `powershell -ExecutionPolicy Bypass -File .\build.ps1` in a PowerShell terminal.
+
 ```powershell
 # Just double-click (or right-click → Run as Administrator):
 dist\BehaviorShield.exe
@@ -111,7 +114,7 @@ The EXE:
 - 🔄 Reload Agent
 - ❌ Exit
 
-Then open the React dashboard separately at `http://localhost:5173`.
+Then open the React dashboard at `http://localhost:5000`.
 
 ---
 
@@ -160,7 +163,7 @@ npm install
 
 ### 4. Build the EXE (optional)
 ```powershell
-.\build.ps1
+powershell -ExecutionPolicy Bypass -File .\build.ps1
 # Output: dist\BehaviorShield.exe
 ```
 

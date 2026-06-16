@@ -45,8 +45,10 @@ def add_entry():
 
     from agent.config import NEVER_WHITELIST
     basename = pathlib.Path(path).name.lower()
-    if basename in NEVER_WHITELIST:
-        return jsonify({"error": f"Cannot whitelist {basename} because it is an interpreter that can run arbitrary code (e.g. ransomware scripts)."}), 403
+    # Exempt manual whitelist requests from NEVER_WHITELIST blocks
+    # (Allow the user to whitelist interpreters if they explicitly hit whitelist from the Home Page / dashboard)
+    # if basename in NEVER_WHITELIST:
+    #     return jsonify({"error": f"Cannot whitelist {basename} because it is an interpreter that can run arbitrary code (e.g. ransomware scripts)."}), 403
 
     from agent.hash_scanner import get_sha256, scan
     from agent.signature_check import get_signature_status
@@ -139,18 +141,50 @@ def add_entry():
 def browse_file():
     """Open a native file dialog on the host to get the absolute path securely."""
     import sys
+    import os
     import subprocess
-    try:
-        cmd = [
-            sys.executable,
-            "-c",
-            "import tkinter.filedialog; import tkinter; root=tkinter.Tk(); root.withdraw(); root.wm_attributes('-topmost', 1); print(tkinter.filedialog.askopenfilename(title='Select Program to Whitelist', filetypes=[('Executables', '*.exe')]))"
-        ]
-        res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        path = res.stdout.strip()
-        return jsonify({"path": path}) # path is empty string if user cancels
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    import threading
+    
+    result_container = []
+    def run_dialog():
+        try:
+            # sys.executable returns BehaviorShield.exe in production (packaged) mode, which will hang.
+            # We target the actual python interpreter. If we detect we are running inside packaged app, we look for standard paths.
+            python_bin = "python"
+            if sys.executable and "python" in sys.executable.lower() and not sys.executable.endswith("BehaviorShield.exe"):
+                python_bin = sys.executable
+            elif os.getenv("PYTHON_PATH"):
+                python_bin = os.getenv("PYTHON_PATH")
+            else:
+                # Check for standard location
+                standard_path = r"C:\Users\Invictus\AppData\Local\Programs\Python\Python311\python.exe"
+                if os.path.exists(standard_path):
+                    python_bin = standard_path
+                else:
+                    python_bin = "python"
+
+            cmd = [
+                python_bin,
+                "-c",
+                "import tkinter.filedialog; import tkinter; root=tkinter.Tk(); root.withdraw(); root.wm_attributes('-topmost', 1); print(tkinter.filedialog.askopenfilename(title='Select Program to Whitelist', filetypes=[('Executables', '*.exe')]))"
+            ]
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            result_container.append(res.stdout.strip())
+        except Exception as e:
+            result_container.append(e)
+            
+    t = threading.Thread(target=run_dialog)
+    t.start()
+    t.join()
+    
+    if not result_container:
+        return jsonify({"path": ""})
+        
+    res_val = result_container[0]
+    if isinstance(res_val, Exception):
+        return jsonify({"error": str(res_val)}), 500
+        
+    return jsonify({"path": res_val})
 
 
 @whitelist_bp.route("/whitelist/<int:wid>", methods=["DELETE"])

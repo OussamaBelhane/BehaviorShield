@@ -90,7 +90,8 @@ def list_events():
                    e.extension, e.score_delta, e.severity, e.timestamp,
                    e.process_name as stored_process_name,
                    e.source,
-                   p.image_path, p.score as process_score, p.status as process_status
+                   p.image_path, p.score as process_score, p.status as process_status,
+                   p.image_sha256, p.signature_status, p.hash_verdict as vt_score
             FROM events e
             LEFT JOIN processes p ON p.pid = e.pid
             LEFT JOIN whitelist w ON (
@@ -141,6 +142,7 @@ def list_events():
         d["process_name"] = stored or joined or live or "Unknown Process"
         d["process_image"] = img_path or (stored if stored and ".exe" in stored.lower() else "") or ""
         d["process_status"] = d.get("process_status") or "ACTIVE"
+        d["signature_status"] = d.get("signature_status") or "UNSIGNED"
         events.append(d)
 
     return jsonify({

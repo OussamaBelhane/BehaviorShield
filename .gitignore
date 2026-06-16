@@ -178,6 +178,7 @@ docs/cv_belhane_oussama.pdf
 
 # Reports and Extractions
 pfa_rapport/
+rapport/
 extract*.txt
 *.pdf
 *.docx

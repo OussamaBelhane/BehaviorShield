@@ -44,7 +44,8 @@ from PIL import Image, ImageDraw
 
 # -- Constants ----------------------------------------------------
 API_BASE       = "http://localhost:5000/api"
-DASHBOARD_URL  = "http://localhost:5173"   # React dev server; prod: http://localhost:5000
+# React dev server in dev; Flask port 5000 in production
+DASHBOARD_URL  = "http://localhost:5000" if getattr(sys, "frozen", False) else "http://localhost:5173"
 POLL_INTERVAL  = 2   # seconds
 STARTUP_KEY    = r"Software\Microsoft\Windows\CurrentVersion\Run"
 STARTUP_NAME   = "BehaviorShieldTray"

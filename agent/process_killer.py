@@ -94,6 +94,20 @@ def kill_process(
         finally:
             conn.close()
 
+        # Also quarantine the executable itself (if it's not a critical system process or python interpreter)
+        if image:
+            import os
+            basename = pathlib.Path(image).name.lower()
+            if (
+                basename not in CRITICAL_PROCESSES 
+                and basename not in ("python.exe", "pythonw.exe")
+                and "c:\\windows\\" not in image.lower()
+                and os.path.exists(image)
+            ):
+                if image not in to_quarantine:
+                    logger.info("Adding threat binary itself to quarantine: %s", image)
+                    to_quarantine.append(image)
+
         for file_path in to_quarantine:
             try:
                 quarantine_file(
