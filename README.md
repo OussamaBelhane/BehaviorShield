@@ -72,11 +72,15 @@ BehaviorShield/
 ├── dist/
 │   └── BehaviorShield.exe        # Packaged standalone EXE
 │
+├── simulateur_ransomware.py      # Benign ransomware simulator (Python)
+├── ransomware_simulator.exe      # Benign ransomware simulator (C Native)
 ├── tray_main.py                  # All-in-one launcher → BehaviorShield.exe
 ├── run_agent.py                  # Dev runner: agent only
 ├── run_backend.py                # Dev runner: Flask only
+├── clear_db.py                   # Dev runner: reset SQLite database
 ├── BehaviorShield.spec           # PyInstaller build spec
 ├── build.ps1                     # One-click EXE build script
+├── install.ps1                   # Service installation script
 ├── requirements.txt              # Python dependencies
 ├── .env.example                  # Environment variable template
 ├── .gitignore
