@@ -221,7 +221,7 @@ def resolve(pid: int, path: str, sysmon_name_map: dict) -> tuple[int, str]:
 
         if _PSUTIL:
             target_patterns = [
-                "test_ransomware.py", "test_ransomware_sim.py", "scoretest.exe", "ransomtest.exe", 
+                "test_ransomware.py", "simulateur_ransomware.py", "scoretest.exe", "ransomtest.exe",
                 "protectiontest.exe", "malwarehashtest.exe", "vthashtest.exe"
             ]
             for proc in psutil.process_iter(["pid", "name", "cmdline"]):

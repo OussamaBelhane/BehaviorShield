@@ -99,10 +99,33 @@ def is_learning_mode(
     learning_days: int = 7,
 ) -> bool:
     """
-    Return True if we are still within the initial 7-day learning window.
+    Return True if we are still within the initial learning window.
     During learning mode the agent logs threats but never kills processes.
     """
-    return False
+    conn = get_connection(db_path)
+    try:
+        # Check custom learning_days override first
+        cfg = conn.execute("SELECT value FROM system_meta WHERE key='learning_days'").fetchone()
+        days = int(cfg["value"]) if cfg else learning_days
+        if days <= 0:
+            return False
+
+        row = conn.execute(
+            "SELECT value FROM system_meta WHERE key='install_time'"
+        ).fetchone()
+        if row is None:
+            return False
+
+        install_time = datetime.fromisoformat(row["value"])
+        if install_time.tzinfo is None:
+            install_time = install_time.replace(tzinfo=timezone.utc)
+        elapsed = datetime.now(timezone.utc) - install_time
+        return elapsed.days < days
+    except Exception as exc:
+        logger.error("Error checking learning mode: %s", exc)
+        return False
+    finally:
+        conn.close()
 def is_whitelist_enabled(db_path: str | pathlib.Path | None = None) -> bool:
     """
     Return True if the whitelist functionality is enabled in settings.

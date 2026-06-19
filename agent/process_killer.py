@@ -35,6 +35,7 @@ def kill_process(
     reason: str = "",
     written_files: list[str] | None = None,
     db_path=None,
+    bypass_learning_mode: bool = False,
 ) -> bool:
     """
     Kill a process and quarantine its written files.
@@ -43,7 +44,7 @@ def kill_process(
     effective_db = db_path or DB_PATH
 
     # -- Learning mode guard --------------------------------------
-    if is_learning_mode(effective_db):
+    if is_learning_mode(effective_db) and not bypass_learning_mode:
         logger.warning(
             "[LEARNING MODE] Would kill PID %d (%s) score=%d -- skipping (learning mode active)",
             pid, image, score,

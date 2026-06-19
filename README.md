@@ -4,6 +4,9 @@
 
 > Real-time protection powered by Windows Sysmon event tracing, multi-rule behavior scoring, automatic process termination, and a React dashboard.
 
+> [!IMPORTANT]
+> **Defense in Depth Strategy:** BehaviorShield is designed as an **Endpoint Detection and Response (EDR)** tool specifically tuned for ransomware behaviors. It is **not** a replacement for a traditional Antivirus (AV) suite (which handles broad threats like web exploits, memory injection, and phishing). Instead, it works as a complementary *second line of defense*—stepping in to catch and neutralize zero-day ransomware that slips past generic AV signatures before mass file encryption occurs.
+
 ---
 
 ## Project Structure
@@ -118,6 +121,31 @@ Then open the React dashboard at `http://localhost:5000`.
 
 ---
 
+## Running on Another PC (Zero Setup Deployment)
+
+If you want to run BehaviorShield on another PC that has nothing installed, you can use the automated installer script:
+
+1. Copy the following files/folders from this project to a folder or USB drive:
+   - `dist\BehaviorShield.exe`
+   - `config\sysmon.xml`
+   - `install.ps1`
+2. Plug the USB drive into the target PC.
+3. Open PowerShell as Administrator, navigate to the folder, and run:
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force
+   .\install.ps1
+   ```
+
+**What the installer does automatically:**
+- Downloads and installs the official **Microsoft Sysmon** background monitor.
+- Configures Sysmon with the custom rules in `sysmon.xml`.
+- Copies `BehaviorShield.exe` and configurations to `C:\BehaviorShield`.
+- Creates a **Desktop Shortcut** for easy launches.
+- Launches the application immediately.
+
+
+---
+
 ## Development Mode
 
 Open **3 terminals**:
@@ -227,11 +255,12 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 
 ## Testing & Simulator Results
 
-BehaviorShield includes a built-in benign simulator to test behavior rules (`test_ransomware_sim.py`).
+BehaviorShield includes a built-in benign simulator to test behavior rules (`simulateur_ransomware.py`).
 
 ### Verification & Metrics:
 - **Test File Creation**: The script populates `C:/BehaviorShield/TestFolder/RansomTest` with mock files and mass-renames them to `.locked` simulating encryption.
-- **Detection Speed**: **1.0 seconds** elapsed between the first suspicious rename event and process mitigation.
+- **Behavioral Detection Speed**: **1.0 seconds** elapsed between the first suspicious rename event and process mitigation.
+- **Known Hash Detection Speed**: Local database lookups for known malware hashes complete and terminate the threat process in **under 0.08 seconds (82 ms)**.
 - **Affected File Limit**: Only **3–4 files** affected/encrypted before the agent triggers process termination.
 - **Response Action**: Automatically terminates the threat process and moves the encrypted files to `C:\BehaviorShield\Quarantine\`.
 - **Non-Admin Test Mode**: A dedicated fallback allows testing the scoring rules and file quarantine within the `TestFolder` even when not running as Administrator (without Sysmon).

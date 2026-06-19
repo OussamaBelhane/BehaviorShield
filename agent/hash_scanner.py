@@ -408,30 +408,23 @@ def _handle_result(
                 "source": source,
                 "vt_score": vt_score
             })
-        else:
-            if mode == "learning":
-                # Always create an alert for malware detections in learning mode (no kill)
-                _create_alert(pid, exe_path, sha256, result, vt_score, effective_db)
-                logger.warning(
-                    "🔴 SCAN MALWARE: PID %d [%s] hash=%s... -- ALERT ONLY (learning mode)",
-                    pid, pathlib.Path(exe_path).name, sha256[:16],
-                )
-            else:
-                # Protection mode: KILL and QUARANTINE instantly
-                logger.critical(
-                    "💀 SCAN MALWARE: PID %d [%s] hash=%s... -- ENGAGING KILL",
-                    pid, pathlib.Path(exe_path).name, sha256[:16],
-                )
-                
-                from agent.process_killer import kill_process
-                kill_process(
-                    pid=pid,
-                    image=exe_path,
-                    score=100,
-                    reason=f"Hash identified as malware ({sha256[:8]}...)",
-                    written_files=None,  # kill_process will auto-discover files from events table
-                    db_path=effective_db
-                )
+        
+        # Always KILL and QUARANTINE instantly for positive hash scans, even in learning mode!
+        logger.critical(
+            "💀 SCAN MALWARE: PID %d [%s] hash=%s... -- ENGAGING INSTANT HASH KILL",
+            pid, pathlib.Path(exe_path).name, sha256[:16],
+        )
+        
+        from agent.process_killer import kill_process
+        kill_process(
+            pid=pid,
+            image=exe_path,
+            score=100,
+            reason=f"Hash identified as malware ({sha256[:8]}...)",
+            written_files=None,  # kill_process will auto-discover files from events table
+            db_path=effective_db,
+            bypass_learning_mode=True
+        )
 
     else:  # unknown
         # Pass to behavior engine -- scanning found nothing conclusive
